@@ -1,0 +1,29 @@
+# Core
+numpy>=1.24
+pandas>=2.0
+PyYAML>=5.4
+scipy>=1.10
+
+# Imaging I/O — TIFF is the format this dataset ships; SimpleITK/nibabel are
+# kept so the same code works unchanged on a volumetric (NIfTI/DICOM) release.
+tifffile>=2023.1
+Pillow>=9.0
+SimpleITK>=2.2
+nibabel>=5.0
+scikit-image>=0.20
+
+# Modelling
+torch>=2.0
+# nnU-Net v2 is the segmentation baseline. Installed separately because it
+# pins its own torch build; see README.
+# nnunetv2>=2.2
+
+# Analysis
+scikit-learn>=1.3
+statsmodels>=0.14
+lifelines>=0.27          # survival analysis, only if outcome fields materialise
+matplotlib>=3.7
+
+# Radiomics — only needed for the biomarker-stability experiments, and only
+# meaningful once pixel spacing is recovered.
+# pyradiomics>=3.1

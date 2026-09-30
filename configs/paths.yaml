@@ -1,0 +1,99 @@
+# Dataset paths for the NPC journal study.
+#
+# All dataset roots are RELATIVE to this repository root (npc_journal_research/),
+# i.e. they point back out into the extracted dataset. Nothing here is ever
+# written to: the dataset directories are treated as read-only.
+#
+# Every path is verified programmatically at load time by src/paths.py; a wrong
+# path raises immediately rather than silently producing an empty manifest. On a
+# partially-staged dataset, pass --allow-missing-roots to downgrade absent roots
+# to a warning.
+#
+# Staging: scripts/00_fetch_dataset.py --local-dir .. --dest ../dataset_v2
+# verifies each archive against the Zenodo MD5 and extracts only the complete
+# ones into ../dataset_v2/{images,primary_data,inner_reliability}/.
+
+dataset:
+  # Per-patient 2D TIFF slices + per-slice binary masks (T1WI / T2WI / CE-T1WI).
+  # This is the `images.zip` derivative, which the data descriptor never
+  # documents. Verified to be a COMPLETE slice stack, not a lesion-only subset.
+  images_root: "../dataset_v2/images/imgs"
+
+  # DICOM series, per-patient ROI NIfTI masks (reader 1), and the CSVs
+  # (info_diagnoses, morphological_parameters, meta_data).
+  primary_data_root: "../dataset_v2/primary_data/data"
+
+  # Independent second-reader ROI NIfTI masks for the 30-patient subset.
+  reliability_root: "../dataset_v2/inner_reliability"
+
+# Fallback roots used only for the structural comparison against the original
+# extraction. Not required; absent ones are skipped.
+legacy:
+  images_root: "../images (1)/imgs"
+
+# Files expected inside primary_data_root. Presence and non-emptiness are both
+# checked; a 0-byte file is reported as PRESENT_BUT_EMPTY, never used as data.
+primary_data_files:
+  diagnoses: "info_diagnoses.csv"
+  morphology: "morphological_parameters.csv"
+  # Documented in the descriptor as holding the MRI machine information. This is
+  # the only stated source of per-patient scanner identity, so the scanner arm of
+  # the study is conditional on it.
+  meta: "meta_data.csv"
+  readme: "README.md"
+  segments_dir: "MRI-Segments"
+
+# Modality tokens as they appear at the start of each TIFF filename.
+# Filename grammar observed on disk:  <MODALITY>_<SLICE:03d>.tif
+#                                     <MODALITY>_<SLICE:03d>_mask.tif
+modalities:
+  - "T1WI"
+  - "T2WI"
+  - "CE-T1WI"
+
+# NIfTI mask stems inside primary_data (reader 1) and inner_reliability (reader 2),
+# mapped to the modality tokens above.
+roi_stems:
+  "ROI-T1": "T1WI"
+  "ROI-T2": "T2WI"
+  "ROI-CE-T1": "CE-T1WI"
+
+# Filesystem noise that must never be interpreted as data.
+ignore:
+  dir_names:
+    - "__MACOSX"
+    - ".ipynb_checkpoints"
+  file_names:
+    - ".DS_Store"
+    - "Thumbs.db"
+  file_prefixes:
+    - "._"
+
+# Outputs (relative to repository root). These are the only paths ever written.
+outputs:
+  manifests_dir: "data/manifests"
+  splits_dir: "data/splits"
+  processed_examples_dir: "data/processed_examples"
+  figures_dir: "results/figures"
+  tables_dir: "results/tables"
+  data_summary_csv: "data_summary.csv"
+  data_audit_md: "data_audit.md"
+
+# Reproducibility. Every stochastic step (splitting, patient sampling for
+# overlays, TTA) seeds from this single value.
+seed: 20260727
+
+# Split design. Calibration is a first-class partition because conformal
+# prediction requires patients disjoint from BOTH training and testing.
+splits:
+  train_frac: 0.55
+  calib_frac: 0.15
+  test_frac: 0.30
+  # Reliability-subset patients are force-assigned to this partition so that
+  # genuine two-reader disagreement is only ever measured on held-out data.
+  reliability_partition: "test"
+  # Stratify the split on these manifest columns when they are available.
+  # Missing columns are skipped with a warning rather than causing a crash.
+  stratify_on:
+    - "scanner_model"
+    - "tumour_burden_stratum"
