@@ -1,0 +1,11 @@
+{
+  "fingerprint": "6b028707e1c4e0b3",
+  "counts": {
+    "train": 136,
+    "test": 104,
+    "calib": 37
+  },
+  "n_reliability": 30,
+  "stratified_on": "NONE",
+  "seed": 20260727
+}
